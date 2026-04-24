@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DRB Physical 100 · 인센티브 계산기</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --red: #E24B4A;
+      --red-light: #FCEBEB;
+      --red-border: #F7C1C1;
+      --red-text: #A32D2D;
+      --green-bg: #EAF3DE;
+      --green-border: #C0DD97;
+      --green-text: #27500A;
+      --green-dark: #3B6D11;
+      --amber-bg: #FAEEDA;
+      --amber-border: #FAC775;
+      --amber-text: #633806;
+      --amber-dark: #854F0B;
+      --blue-bg: #E6F1FB;
+      --blue-border: #B5D4F4;
+      --blue-text: #0C447C;
+      --blue-dark: #185FA5;
+      --gray-bg: #F5F5F3;
+      --gray-border: #E0DED8;
+      --text-primary: #1a1a1a;
+      --text-secondary: #6b6b6b;
+      --text-tertiary: #aaa;
+      --bg: #F7F6F3;
+      --card-bg: #fff;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+    }
+
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: var(--bg);
+      color: var(--text-primary);
+      min-height: 100vh;
+      padding: 2rem 1rem 4rem;
+    }
+
+    .container {
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    /* 헤더 */
+    .header {
+      text-align: center;
+      margin-bottom: 2rem;
+      animation: fadeUp 0.5s ease both;
+    }
+    .badge {
+      display: inline-block;
+      background: var(--red);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      margin-bottom: 10px;
+    }
+    .header h1 {
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+    }
+    .header p {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    /* 탭 */
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 1.5rem;
+      background: var(--card-bg);
+      border-radius: var(--radius-md);
+      padding: 6px;
+      border: 1px solid var(--gray-border);
+      animation: fadeUp 0.5s 0.1s ease both;
+    }
+    .tab {
+      flex: 1;
+      padding: 10px;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 500;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      color: var(--text-secondary);
+      border: none;
+      background: transparent;
+      transition: all 0.2s;
+      font-family: 'Noto Sans KR', sans-serif;
+    }
+    .tab.active {
+      background: var(--red);
+      color: #fff;
+    }
+
+    /* 카드 */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--gray-border);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+      animation: fadeUp 0.5s 0.15s ease both;
+    }
+    .card-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* 점수 입력 */
+    .score-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .adj-btn {
+      width: 48px;
+      height: 56px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--gray-border);
+      background: var(--gray-bg);
+      font-size: 24px;
+      color: var(--text-primary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      user-select: none;
+      transition: background 0.15s, transform 0.1s;
+      font-family: 'Noto Sans KR', sans-serif;
+    }
+    .adj-btn:hover { background: #eee; }
+    .adj-btn:active { transform: scale(0.95); }
+    .adj-btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+    .score-num {
+      flex: 1;
+      text-align: center;
+      font-size: 32px;
+      font-weight: 700;
+      padding: 12px 0;
+      border: 1px solid var(--gray-border);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      background: var(--gray-bg);
+      font-family: 'Noto Sans KR', sans-serif;
+    }
+    .score-num:focus { outline: none; border-color: var(--red); }
+    .range-pill {
+      display: inline-block;
+      margin-top: 10px;
+      background: var(--red-light);
+      color: var(--red-text);
+      font-size: 12px;
+      font-weight: 500;
+      padding: 4px 12px;
+      border-radius: 20px;
+      border: 1px solid var(--red-border);
+    }
+
+    /* 메트릭 카드 */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 1rem;
+      animation: fadeUp 0.5s 0.2s ease both;
+    }
+    .metric-card {
+      background: var(--card-bg);
+      border: 1px solid var(--gray-border);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      text-align: center;
+    }
+    .metric-label {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+    .metric-val {
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    /* 미션 테이블 */
+    .mission-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .mission-table th {
+      text-align: left;
+      font-weight: 500;
+      color: var(--text-secondary);
+      padding: 6px 0;
+      border-bottom: 1px solid var(--gray-border);
+      font-size: 12px;
+    }
+    .mission-table td {
+      padding: 10px 0;
+      border-bottom: 1px solid var(--gray-border);
+      color: var(--text-primary);
+      vertical-align: middle;
+    }
+    .mission-table tr:last-child td { border-bottom: none; }
+    .prize { color: var(--red); font-weight: 700; }
+    .prize.zero { color: var(--text-tertiary); font-weight: 400; text-decoration: line-through; }
+
+    /* 토탈 스트립 */
+    .total-strip {
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 12px;
+    }
+    .total-strip.hot { background: var(--red); }
+    .total-strip.cold { background: var(--gray-bg); border: 1px solid var(--gray-border); }
+    .total-label { font-size: 13px; font-weight: 500; }
+    .total-label.hot { color: rgba(255,255,255,0.85); }
+    .total-label.cold { color: var(--text-secondary); }
+    .total-amount { font-size: 22px; font-weight: 700; }
+    .total-amount.hot { color: #fff; }
+    .total-amount.cold { color: var(--text-primary); }
+
+    /* 결과 박스 */
+    .result-box {
+      border-radius: var(--radius-md);
+      padding: 1.1rem 1.25rem;
+      margin-bottom: 8px;
+      animation: fadeUp 0.3s ease both;
+    }
+    .result-box.success { background: var(--green-bg); border: 1px solid var(--green-border); }
+    .result-box.warning { background: var(--amber-bg); border: 1px solid var(--amber-border); }
+    .result-box.fail { background: var(--red-light); border: 1px solid var(--red-border); }
+    .result-box.info { background: var(--blue-bg); border: 1px solid var(--blue-border); }
+    .result-box.neutral { background: var(--gray-bg); border: 1px solid var(--gray-border); }
+    .result-title { font-size: 14px; font-weight: 700; margin-bottom: 5px; }
+    .result-title.success { color: var(--green-text); }
+    .result-title.warning { color: var(--amber-text); }
+    .result-title.fail { color: var(--red-text); }
+    .result-title.info { color: var(--blue-text); }
+    .result-title.neutral { color: var(--text-primary); }
+    .result-body { font-size: 13px; line-height: 1.75; }
+    .result-body.success { color: var(--green-dark); }
+    .result-body.warning { color: var(--amber-dark); }
+    .result-body.fail { color: var(--red-text); }
+    .result-body.info { color: var(--blue-dark); }
+    .result-body.neutral { color: var(--text-secondary); }
+
+    /* 시나리오 */
+    .sc-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 1rem;
+    }
+    .sc-field { display: flex; flex-direction: column; gap: 5px; }
+    .sc-field label { font-size: 12px; color: var(--text-secondary); font-weight: 500; }
+    .sc-field input {
+      text-align: center;
+      font-size: 26px;
+      font-weight: 700;
+      padding: 12px 6px;
+      border: 1px solid var(--gray-border);
+      border-radius: var(--radius-sm);
+      background: var(--gray-bg);
+      color: var(--text-primary);
+      width: 100%;
+      font-family: 'Noto Sans KR', sans-serif;
+    }
+    .sc-field input:focus { outline: none; border-color: var(--red); }
+    .type-tabs { display: flex; gap: 8px; }
+
+    /* 애니메이션 */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* 푸터 */
+    .footer {
+      text-align: center;
+      margin-top: 2rem;
+      font-size: 12px;
+      color: var(--text-tertiary);
+      line-height: 1.8;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="badge">DRB Physical 100</div>
+      <h1>인센티브 계산기</h1>
+      <p>내 점수를 입력하면 상금 조건을 바로 확인할 수 있어요</p>
+    </div>
+
+    <div class="tabs" id="main-tabs">
+      <button class="tab active" onclick="switchTab('check')">내 점수 확인</button>
+      <button class="tab" onclick="switchTab('scenario')">가상 시나리오</button>
+    </div>
+
+    <!-- 탭 1: 내 점수 확인 -->
+    <div id="tab-check">
+      <div class="card">
+        <div class="card-label">사전 체성분 점수 입력 (1~100점)</div>
+        <div class="score-row">
+          <button class="adj-btn" id="pre-minus" onclick="adjPre(-1)">−</button>
+          <input class="score-num" type="number" id="pre-score" min="1" max="100" value="65" oninput="updateCheck()">
+          <button class="adj-btn" id="pre-plus" onclick="adjPre(1)">+</button>
+        </div>
+        <div id="pre-range-tag" class="range-pill">점수 구간: 60~69점</div>
+      </div>
+
+      <div class="two-col">
+        <div class="metric-card">
+          <div class="metric-label">내 사전 점수</div>
+          <div class="metric-val" id="disp-score" style="color:var(--red)">65점</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">점수 구간</div>
+          <div class="metric-val" id="disp-range" style="font-size:16px">60~69점</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <table class="mission-table">
+          <tr><th>미션</th><th>필요 상승</th><th>목표 점수</th><th>상금</th></tr>
+          <tr>
+            <td>중간</td>
+            <td id="mid-need">+3점</td>
+            <td id="mid-target">68점 이상</td>
+            <td class="prize">2만원</td>
+          </tr>
+          <tr>
+            <td>최종</td>
+            <td id="fin-need">+6점</td>
+            <td id="fin-target">71점 이상</td>
+            <td class="prize">5만원</td>
+          </tr>
+          <tr id="keep-row">
+            <td>유지</td>
+            <td>감소 없이 유지</td>
+            <td id="keep-target">65점 이상</td>
+            <td style="color:var(--text-secondary);font-size:12px">+1만원</td>
+          </tr>
+        </table>
+        <div class="total-strip hot">
+          <span class="total-label hot">중간 + 최종 달성 시</span>
+          <span class="total-amount hot">최대 7만원</span>
+        </div>
+      </div>
+
+      <div id="check-extra"></div>
+    </div>
+
+    <!-- 탭 2: 가상 시나리오 -->
+    <div id="tab-scenario" style="display:none">
+      <div class="card">
+        <div class="card-label">사전 점수 → 측정 후 점수 (1~100점)</div>
+        <div class="sc-grid">
+          <div class="sc-field">
+            <label>사전 점수</label>
+            <input type="number" id="sc-pre" min="1" max="100" value="65" oninput="updateScenario()">
+          </div>
+          <div class="sc-field">
+            <label>측정 후 점수</label>
+            <input type="number" id="sc-after" min="1" max="100" value="70" oninput="updateScenario()">
+          </div>
+        </div>
+        <div class="card-label" style="margin-bottom:8px">어떤 측정인가요?</div>
+        <div class="type-tabs">
+          <button class="tab active" id="btn-mid" onclick="setMeasureType('mid')">중간 측정</button>
+          <button class="tab" id="btn-final" onclick="setMeasureType('final')">사후 측정</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <table class="mission-table">
+          <tr><th>미션</th><th>결과</th><th>상금</th></tr>
+          <tr id="sc-mid-row">
+            <td>중간</td>
+            <td id="sc-mid-result">—</td>
+            <td id="sc-mid-prize" class="prize">—</td>
+          </tr>
+          <tr id="sc-fin-row" style="display:none">
+            <td>최종</td>
+            <td id="sc-fin-result">—</td>
+            <td id="sc-fin-prize" class="prize">—</td>
+          </tr>
+          <tr id="sc-keep-row" style="display:none">
+            <td>유지</td>
+            <td id="sc-keep-result">—</td>
+            <td id="sc-keep-prize" style="font-size:12px">—</td>
+          </tr>
+        </table>
+        <div class="total-strip hot" id="sc-total-strip">
+          <span class="total-label hot" id="sc-total-label">예상 인센티브</span>
+          <span class="total-amount hot" id="sc-total-amount">—</span>
+        </div>
+      </div>
+
+      <div id="scenario-result"></div>
+    </div>
+
+    <div class="footer">
+      동일고무벨트 환경안전팀 · 문의: 신해인 (내선 9262)<br>
+      본 계산기는 참고용이며 실제 지급액은 공식 기준을 따릅니다.
+    </div>
+  </div>
+
+  <script>
+    const RULES = [
+      {max:39, mid:10, final:20}, {max:49, mid:8,  final:15},
+      {max:59, mid:4,  final:8},  {max:69, mid:3,  final:6},
+      {max:79, mid:3,  final:5},  {max:85, mid:2,  final:4},
+      {max:89, mid:2,  final:3},  {max:100,mid:1,  final:2}
+    ];
+    function getRule(s) { return RULES.find(r => s <= r.max) || RULES[RULES.length-1]; }
+    function getRange(s) {
+      if(s<=39)return'39점 이하'; if(s<=49)return'40~49점'; if(s<=59)return'50~59점';
+      if(s<=69)return'60~69점';   if(s<=79)return'70~79점'; if(s<=85)return'80~85점';
+      if(s<=89)return'86~89점';   return'90점 이상';
+    }
+    function clamp(v,mn,mx) { return Math.min(mx, Math.max(mn, v)); }
+    let measureType = 'mid';
+
+    function switchTab(t) {
+      document.getElementById('tab-check').style.display    = t==='check'    ? '' : 'none';
+      document.getElementById('tab-scenario').style.display = t==='scenario' ? '' : 'none';
+      document.querySelectorAll('#main-tabs .tab').forEach((el,i) =>
+        el.classList.toggle('active', (t==='check'&&i===0)||(t==='scenario'&&i===1))
+      );
+    }
+
+    function setMeasureType(type) {
+      measureType = type;
+      document.getElementById('btn-mid').classList.toggle('active', type==='mid');
+      document.getElementById('btn-final').classList.toggle('active', type==='final');
+      updateScenario();
+    }
+
+    function adjPre(d) {
+      const el = document.getElementById('pre-score');
+      el.value = clamp((parseInt(el.value)||1) + d, 1, 100);
+      updateCheck();
+    }
+
+    function rb(type, title, body) {
+      return `<div class="result-box ${type}">
+        <div class="result-title ${type}">${title}</div>
+        <div class="result-body ${type}">${body}</div>
+      </div>`;
+    }
+
+    function updateCheck() {
+      const s = clamp(parseInt(document.getElementById('pre-score').value)||1, 1, 100);
+      document.getElementById('pre-score').value = s;
+      document.getElementById('pre-minus').disabled = s <= 1;
+      document.getElementById('pre-plus').disabled  = s >= 100;
+
+      const rule   = getRule(s);
+      const range  = getRange(s);
+      const isHigh = s >= 75;
+      const isTop  = s >= 99;
+
+      document.getElementById('pre-range-tag').textContent = '점수 구간: ' + range;
+      document.getElementById('disp-score').textContent    = s + '점';
+      document.getElementById('disp-range').textContent    = range;
+      document.getElementById('mid-need').textContent      = '+' + rule.mid + '점';
+      document.getElementById('fin-need').textContent      = '+' + rule.final + '점';
+      document.getElementById('keep-row').style.display    = isHigh ? '' : 'none';
+      document.getElementById('keep-target').textContent   = s + '점 이상';
+
+      if (isTop) {
+        document.getElementById('mid-target').textContent = '달성 불가 (최고 구간)';
+        document.getElementById('fin-target').textContent = '달성 불가 (최고 구간)';
+      } else {
+        const midGoal = s + rule.mid;
+        const finGoal = s + rule.final;
+        document.getElementById('mid-target').textContent = (midGoal > 100 ? '100점' : midGoal + '점') + ' 이상';
+        document.getElementById('fin-target').textContent = (finGoal > 100 ? '100점' : finGoal + '점') + ' 이상';
+      }
+
+      let extra = '';
+      if (isTop) {
+        extra += rb('warning', '이미 최고 구간이에요!', '90점 이상 구간은 +1점만 올려도 미션을 달성할 수 있어요. 99~100점이라면 달성이 어려울 수 있으니 관리자에게 문의해보세요.');
+      }
+      if (isHigh) {
+        extra += rb('info', '유지 미션 대상자예요!', '사전 점수 ' + s + '점으로 유지 미션 해당자입니다. 사후 측정에서 ' + s + '점 이상만 유지해도 1만원을 받을 수 있어요. 단, 중간·최종 미션 달성 시에는 유지 인센티브 대신 해당 미션 상금을 받아요.');
+      }
+      extra += rb('neutral', '중간 미션 못 달성해도 괜찮아요', '사후 측정에서 최종 미션을 달성하면 5만원 인센티브는 그대로 받아요!');
+      document.getElementById('check-extra').innerHTML = extra;
+    }
+
+    function updateScenario() {
+      const pre   = clamp(parseInt(document.getElementById('sc-pre').value)||1,  1, 100);
+      const after = clamp(parseInt(document.getElementById('sc-after').value)||1, 1, 100);
+      document.getElementById('sc-pre').value   = pre;
+      document.getElementById('sc-after').value = after;
+
+      const diff      = after - pre;
+      const rule      = getRule(pre);
+      const isMid     = measureType === 'mid';
+      const needed    = isMid ? rule.mid : rule.final;
+      const passed    = diff >= needed;
+      const isHigh    = pre >= 75;
+      const kept      = after >= pre;
+      const sameScore = diff === 0;
+      const mLabel    = isMid ? '중간 미션' : '최종 미션';
+      const amt       = isMid ? '2만원' : '5만원';
+
+      document.getElementById('sc-mid-row').style.display = isMid ? '' : 'none';
+      document.getElementById('sc-fin-row').style.display = isMid ? 'none' : '';
+
+      if (isMid) {
+        document.getElementById('sc-mid-result').textContent  = passed ? '달성' : '미달성';
+        document.getElementById('sc-mid-result').style.color  = passed ? 'var(--green-text)' : 'var(--red-text)';
+        document.getElementById('sc-mid-prize').textContent   = passed ? '2만원' : '0원';
+        document.getElementById('sc-mid-prize').className     = passed ? 'prize' : 'prize zero';
+      } else {
+        document.getElementById('sc-fin-result').textContent  = passed ? '달성' : '미달성';
+        document.getElementById('sc-fin-result').style.color  = passed ? 'var(--green-text)' : 'var(--red-text)';
+        document.getElementById('sc-fin-prize').textContent   = passed ? '5만원' : '0원';
+        document.getElementById('sc-fin-prize').className     = passed ? 'prize' : 'prize zero';
+      }
+
+      const keepRow = document.getElementById('sc-keep-row');
+      let keepEarned = 0;
+      if (isHigh && !isMid) {
+        keepRow.style.display = '';
+        const keepOk = kept && !passed;
+        keepEarned = keepOk ? 1 : 0;
+        if (passed) {
+          document.getElementById('sc-keep-result').textContent = '해당 없음';
+          document.getElementById('sc-keep-result').style.color = 'var(--text-tertiary)';
+          document.getElementById('sc-keep-prize').textContent  = '—';
+          document.getElementById('sc-keep-prize').style.color  = 'var(--text-tertiary)';
+          document.getElementById('sc-keep-prize').style.textDecoration = 'none';
+        } else {
+          document.getElementById('sc-keep-result').textContent = keepOk ? '달성' : '미달성';
+          document.getElementById('sc-keep-result').style.color = keepOk ? 'var(--green-text)' : 'var(--red-text)';
+          document.getElementById('sc-keep-prize').textContent  = keepOk ? '+1만원' : '0원';
+          document.getElementById('sc-keep-prize').style.color  = keepOk ? 'var(--red)' : 'var(--text-tertiary)';
+          document.getElementById('sc-keep-prize').style.textDecoration = keepOk ? 'none' : 'line-through';
+        }
+      } else {
+        keepRow.style.display = 'none';
+      }
+
+      const total = (passed ? (isMid ? 2 : 5) : 0) + keepEarned;
+      const strip  = document.getElementById('sc-total-strip');
+      const lbl    = document.getElementById('sc-total-label');
+      const amtEl  = document.getElementById('sc-total-amount');
+      if (total > 0) {
+        strip.className  = 'total-strip hot';
+        lbl.className    = 'total-label hot';   lbl.textContent   = '예상 인센티브';
+        amtEl.className  = 'total-amount hot';  amtEl.textContent = total + '만원';
+      } else {
+        strip.className  = 'total-strip cold';
+        lbl.className    = 'total-label cold';  lbl.textContent   = '예상 인센티브';
+        amtEl.className  = 'total-amount cold'; amtEl.textContent = '0원';
+      }
+
+      let html = '';
+      if (passed) {
+        html += rb('success', '🎉 ' + mLabel + ' 달성!',
+          pre + '점 → ' + after + '점 (+' + diff + '점)으로 목표 +' + needed + '점 달성!<br><strong>' + amt + ' 인센티브 지급 대상입니다.</strong>');
+        if (isHigh && !isMid) {
+          html += rb('info', '유지 미션보다 더 받아요!',
+            '최종 미션을 달성했으므로 유지 인센티브(1만원) 대신 최종 인센티브 5만원을 받아요. 더 유리한 결과예요!');
+        }
+      } else {
+        if (sameScore) {
+          html += rb('warning', mLabel + ' 미달성 — 점수 변화 없음',
+            '측정 전후 점수가 ' + pre + '점으로 동일해요. 미션을 달성하려면 +' + needed + '점이 필요해요.' +
+            (isHigh && kept ? '<br>단, 유지 미션은 달성했어요!' : ''));
+        } else if (diff < 0) {
+          html += rb('fail', mLabel + ' 미달성 — 점수 하락',
+            pre + '점 → ' + after + '점 (' + diff + '점 하락)으로 미션 미달성이에요.' +
+            (isHigh ? '<br>점수도 내려가 유지 미션도 받을 수 없어요. 사후 측정 전까지 다시 올려봐요!' : ''));
+        } else {
+          const lack = needed - diff;
+          html += rb('fail', mLabel + ' 미달성 — 0원',
+            pre + '점 → ' + after + '점 (+' + diff + '점) — 목표 +' + needed + '점까지 <strong>' + lack + '점 부족</strong>해요. 조금만 더!');
+        }
+        if (isHigh && !isMid && !sameScore && diff >= 0 && kept) {
+          html += rb('info', '유지 미션은 달성! +1만원',
+            '최종 미션 미달성이지만 점수를 유지했으므로 유지 인센티브 1만원을 받을 수 있어요.');
+        }
+      }
+      if (!isMid && !passed && !sameScore && diff > 0) {
+        html += rb('neutral', '중간 미션 결과와 무관해요',
+          '중간 미션을 달성하지 못했더라도 최종 미션만 달성하면 5만원을 받아요.');
+      }
+      document.getElementById('scenario-result').innerHTML = html;
+    }
+
+    updateCheck();
+    updateScenario();
+  </script>
+</body>
+</html>
